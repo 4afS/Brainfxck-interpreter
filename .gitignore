@@ -1,3 +1,4 @@
 .stack-work/
 brainfxck-interpreter.cabal
+*.lock
 *~
