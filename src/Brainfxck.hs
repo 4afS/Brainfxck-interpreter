@@ -21,7 +21,7 @@ data Op
   | Loop Ops
   deriving (Eq, Show)
 
-type Memory = (Vector Int, Pointer)
+type Memory = Vector Int
 type Pointer = Int
 
 type Ops = Vector Op
@@ -51,15 +51,15 @@ uncons :: Vector a -> Maybe (a, Vector a)
 uncons (V.null -> True) = Nothing
 uncons vs               = Just (V.head vs, V.tail vs)
 
-toEvaluable :: Ops -> StateT Memory IO (Maybe String)
+toEvaluable :: Ops -> StateT (Memory, Pointer) IO (Maybe String)
 toEvaluable op = fmap (map chr) . sequence . filter (/= Nothing) <$> toEvaluable' op
   where
-    toEvaluable' :: Ops -> StateT Memory IO [Maybe Int]
+    toEvaluable' :: Ops -> StateT (Memory, Pointer) IO [Maybe Int]
     toEvaluable' Nil                 = return []
     toEvaluable' (Cons (Loop op) xs) = loop op ++^ toEvaluable' xs
     toEvaluable' (Cons x         xs) = evaluate x +^ toEvaluable' xs
 
-    loop :: Ops -> StateT Memory IO [Maybe Int]
+    loop :: Ops -> StateT (Memory, Pointer) IO [Maybe Int]
     loop op = do
       (memory, pointer) <- get
       if memory V.! pointer > 0
@@ -72,7 +72,7 @@ mx +^ mxs = (:) <$> mx <*> mxs
 (++^) :: Monad m => m [a] -> m [a] -> m [a]
 mxs ++^ mys = (++) <$> mxs <*> mys
 
-evaluate :: Op -> StateT Memory IO (Maybe Int)
+evaluate :: Op -> StateT (Memory, Pointer) IO (Maybe Int)
 evaluate MoveRight = modify (updatePointer increment) >> return Nothing
 
 evaluate MoveLeft = modify (updatePointer decrement) >> return Nothing
@@ -98,11 +98,11 @@ evaluate Substitution = do
   return Nothing
 
 updateMemory
-  :: Pointer -> (Int -> Int) -> Memory -> Memory
+  :: Pointer -> (Int -> Int) -> (Memory, Pointer) -> (Memory, Pointer)
 updateMemory index f (memory, pointer) =
   (memory V.// [(index, f (memory V.! index))], pointer)
 
-updatePointer :: (Pointer -> Pointer) -> Memory -> Memory
+updatePointer :: (Pointer -> Pointer) -> (Memory, Pointer) -> (Memory, Pointer)
 updatePointer f (memory, pointer) = (memory, f pointer)
 
 increment, decrement :: Int -> Int
