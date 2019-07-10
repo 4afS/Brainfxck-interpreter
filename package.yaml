@@ -24,6 +24,7 @@ dependencies:
 - vector >= 0.1
 - mtl
 - lens
+- haskeline >= 0.7
 
 library:
   source-dirs: src
