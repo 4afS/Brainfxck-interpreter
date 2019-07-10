@@ -19,7 +19,6 @@ data Op
   | Put
   | Substitution
   | Loop Ops
-  | InvalidOp
   deriving (Eq, Show)
 
 type Watching = Int
@@ -115,4 +114,4 @@ run source = do
   let initializedPointerSequence = V.replicate 30000 0
   let evaluable = toEvaluable $ parse source
   evaluated <- evalStateT evaluable (initializedPointerSequence, 0)
-  mapM_ putStrLn evaluated
+  mapM_ putStrLn evaluated 
