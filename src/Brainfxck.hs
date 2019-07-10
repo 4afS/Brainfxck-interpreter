@@ -52,15 +52,15 @@ uncons :: Vector a -> Maybe (a, Vector a)
 uncons (V.null -> True) = Nothing
 uncons vs               = Just (V.head vs, V.tail vs)
 
-toEvaluable :: Vector Op -> StateT PointerSequence IO (Maybe String)
+toEvaluable :: Ops -> StateT PointerSequence IO (Maybe String)
 toEvaluable op = fmap (map chr) . sequence . filter (/= Nothing) <$> toEvaluable' op
   where
-    toEvaluable' :: Vector Op -> StateT PointerSequence IO [Maybe Int]
+    toEvaluable' :: Ops -> StateT PointerSequence IO [Maybe Int]
     toEvaluable' Nil                 = return []
     toEvaluable' (Cons (Loop op) xs) = loop op ++^ toEvaluable' xs
     toEvaluable' (Cons x         xs) = evaluate x +^ toEvaluable' xs
 
-    loop :: Vector Op -> StateT PointerSequence IO [Maybe Int]
+    loop :: Ops -> StateT PointerSequence IO [Maybe Int]
     loop op = do
       (seq, watching) <- get
       if seq V.! watching > 0
