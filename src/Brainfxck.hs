@@ -74,13 +74,9 @@ mx +^ mxs = (:) <$> mx <*> mxs
 mxs ++^ mys = (++) <$> mxs <*> mys
 
 evaluate :: Op -> StateT PointerSequence IO (Maybe Int)
-evaluate MoveRight = do
-  modify $ updateWatching increment
-  return Nothing
+evaluate MoveRight = modify (updateWatching increment) >> return Nothing
 
-evaluate MoveLeft = do
-  modify $ updateWatching decrement
-  return Nothing
+evaluate MoveLeft = modify (updateWatching decrement) >> return Nothing
 
 evaluate Increment = do
   (_, watching) <- get
