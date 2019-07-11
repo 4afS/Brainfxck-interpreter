@@ -1,11 +1,10 @@
 {-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE ViewPatterns    #-}
 
-module Brainfxck
-  ( run
-  )
-where
+module Brainfxck where
 
+import           CheckSyntax
+import           Control.Lens        ((%~), (&), _1, _2)
 import           Control.Monad.State (StateT, evalStateT, get, lift, modify)
 import           Data.Char           (chr, ord)
 import           Data.Vector         (Vector)
@@ -73,28 +72,20 @@ mx +^ mxs = (:) <$> mx <*> mxs
 mxs ++^ mys = (++) <$> mxs <*> mys
 
 evaluate :: Op -> StateT (Memory, Pointer) IO (Maybe Int)
-evaluate MoveRight = modify (updatePointer increment) >> return Nothing
+evaluate MoveRight = moveRight >> return Nothing
+evaluate MoveLeft = moveLeft >> return Nothing
 
-evaluate MoveLeft = modify (updatePointer decrement) >> return Nothing
-
-evaluate Increment = do
-  (_, pointer) <- get
-  modify $ updateMemory pointer increment
-  return Nothing
-
-evaluate Decrement = do
-  (_, pointer) <- get
-  modify $ updateMemory pointer decrement
-  return Nothing
+evaluate Increment = increment >> return Nothing
+evaluate Decrement = decrement >> return Nothing
 
 evaluate Put = do
   (memory, pointer) <- get
   return . Just $ memory V.! pointer
 
 evaluate Substitution = do
-  (_, pointer) <- get
+  pointer <- getPointer
   c             <- lift getChar
-  modify $ updateMemory pointer (const (ord c))
+  modify $ updateMemory pointer $ const $ ord c
   return Nothing
 
 updateMemory
@@ -102,16 +93,26 @@ updateMemory
 updateMemory index f (memory, pointer) =
   (memory V.// [(index, f (memory V.! index))], pointer)
 
-updatePointer :: (Pointer -> Pointer) -> (Memory, Pointer) -> (Memory, Pointer)
-updatePointer f (memory, pointer) = (memory, f pointer)
+moveRight, moveLeft :: Monad m => StateT (Memory, Pointer) m ()
+moveRight = modify $ _2 %~ (+1)
+moveLeft = modify $ _2 %~ subtract 1
 
-increment, decrement :: Int -> Int
-increment = (+ 1)
-decrement = subtract 1
+increment, decrement :: Monad m => StateT (Memory, Pointer) m ()
+increment = do
+  pointer <- getPointer
+  modify (updateMemory pointer (+1))
+decrement = do
+  pointer <- getPointer
+  modify (updateMemory pointer (subtract 1))
 
-run :: String -> IO ()
-run source = do
+getPointer :: Monad m => StateT (Memory, Pointer) m Pointer
+getPointer = do
+  (_, pointer) <- get
+  return pointer
+
+execute :: String -> IO (Maybe String)
+execute source = do
   let initializedMemory = V.replicate 30000 0
-  let evaluable = toEvaluable $ parse source
-  evaluated <- evalStateT evaluable (initializedMemory, 0)
-  mapM_ putStrLn evaluated
+  if isInvalid source
+     then return Nothing
+     else evalStateT (toEvaluable $ parse source) (initializedMemory, 0)
