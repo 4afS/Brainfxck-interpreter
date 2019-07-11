@@ -7,6 +7,7 @@ import           CheckSyntax
 import           Control.Lens        ((%~), (&), _1, _2)
 import           Control.Monad.State (StateT, evalStateT, get, lift, modify)
 import           Data.Char           (chr, ord)
+import           Data.Maybe
 import           Data.Vector         (Vector)
 import qualified Data.Vector         as V
 
@@ -24,6 +25,11 @@ type Memory = Vector Int
 type Pointer = Int
 
 type Ops = Vector Op
+
+data Return
+  = Value Int
+  | None
+  deriving Eq
 
 parse :: String -> Ops
 parse []     = V.empty
@@ -50,8 +56,8 @@ uncons :: Vector a -> Maybe (a, Vector a)
 uncons (V.null -> True) = Nothing
 uncons vs               = Just (V.head vs, V.tail vs)
 
-toEvaluable :: Ops -> StateT (Memory, Pointer) IO (Maybe String)
-toEvaluable op = fmap (map chr) . sequence . filter (/= Nothing) <$> toEvaluable' op
+toEvaluable :: Ops -> StateT (Memory, Pointer) IO String
+toEvaluable op = maybe "" (map chr) . sequence . filter (/= Nothing) <$> toEvaluable' op
   where
     toEvaluable' :: Ops -> StateT (Memory, Pointer) IO [Maybe Int]
     toEvaluable' Nil                 = return []
@@ -110,9 +116,9 @@ getPointer = do
   (_, pointer) <- get
   return pointer
 
-execute :: String -> IO (Maybe String)
+execute :: String -> IO (Either [Result] String)
 execute source = do
   let initializedMemory = V.replicate 30000 0
   if isInvalid source
-     then return Nothing
-     else evalStateT (toEvaluable $ parse source) (initializedMemory, 0)
+     then return $ Left $ checkInvalids source
+     else Right <$> evalStateT (toEvaluable $ parse source) (initializedMemory, 0)

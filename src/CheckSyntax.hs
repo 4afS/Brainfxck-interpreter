@@ -3,31 +3,34 @@ module CheckSyntax where
 data Result
   = OK
   | Error ErrorMessage
-  deriving Eq
+  deriving (Show, Eq)
 
 data ErrorMessage
   = InvalidParenthesis
   deriving (Eq, Show)
 
 isInvalid :: String -> Bool
-isInvalid source  = all (== OK)$ do
-  checkInvalid <- checkInvalids
+isInvalid = not . null . checkInvalids
+
+checkInvalids :: String -> [Result]
+checkInvalids source = filter (/= OK) $ do
+  checkInvalid <- checkingInvalids
   return $ checkInvalid source
 
-checkInvalids :: [String -> Result]
-checkInvalids =
+checkingInvalids :: [String -> Result]
+checkingInvalids =
   [ checkParenthesis
   ]
 
 checkParenthesis :: String -> Result
 checkParenthesis source =
-  if null (deleteParentheses source)
+  if null (deleteParentheses (filter (`elem` "[]") source))
      then OK
      else Error InvalidParenthesis
 
 hasParenthesis :: String -> Bool
 hasParenthesis [_]          = False
-hasParenthesis []          = False
+hasParenthesis []           = False
 hasParenthesis ('[':']':xs) = True
 hasParenthesis (x:xs)       = hasParenthesis xs
 

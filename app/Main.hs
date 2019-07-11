@@ -1,9 +1,10 @@
 module Main where
 
-import Brainfxck
-import Control.Monad
-import Control.Monad.Trans
-import System.Console.Haskeline
+import           Brainfxck
+import           CheckSyntax
+import           Control.Monad
+import           Control.Monad.Trans
+import           System.Console.Haskeline
 
 type Repl a = InputT IO a
 
@@ -15,10 +16,10 @@ repl :: Repl ()
 repl = do
   safeInput <- getInputLine ">> "
   case safeInput of
-    Just ":q" -> outputStrLn "see you later."
-    Just s -> liftIO (printExecuted =<< execute s) >> repl
-    Nothing -> outputStrLn "Please Enter a code" >> repl
+    Just ":q"  -> outputStrLn "See you later."
+    Nothing    -> outputStrLn "See you later" >> repl
+    Just input -> liftIO (printExecuted =<< execute input) >> repl
 
-printExecuted :: Maybe String -> IO ()
-printExecuted Nothing = putStrLn "Invalid syntax"
-printExecuted (Just s) = putStrLn s
+printExecuted :: Either [Result] String -> IO ()
+printExecuted (Left errors) = mapM_ print errors
+printExecuted (Right s)     = putStrLn s
