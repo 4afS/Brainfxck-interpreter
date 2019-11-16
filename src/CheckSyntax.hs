@@ -5,39 +5,38 @@ data Result
   | Error ErrorMessage
   deriving (Show, Eq)
 
-data ErrorMessage
-  = InvalidParenthesis
+data ErrorMessage =
+  InvalidParenthesis
   deriving (Eq, Show)
 
 isInvalid :: String -> Bool
 isInvalid = not . null . checkInvalids
 
 checkInvalids :: String -> [Result]
-checkInvalids source = filter (/= OK) $ do
-  checkInvalid <- checkingInvalids
-  return $ checkInvalid source
+checkInvalids source =
+  filter (/= OK) $ do
+    checkInvalid <- checkingInvalids
+    return $ checkInvalid source
 
 checkingInvalids :: [String -> Result]
-checkingInvalids =
-  [ checkParenthesis
-  ]
+checkingInvalids = [checkParenthesis]
 
 checkParenthesis :: String -> Result
 checkParenthesis source =
   if null (deleteParentheses (filter (`elem` "[]") source))
-     then OK
-     else Error InvalidParenthesis
+    then OK
+    else Error InvalidParenthesis
 
 hasParenthesis :: String -> Bool
-hasParenthesis [_]          = False
-hasParenthesis []           = False
+hasParenthesis [_] = False
+hasParenthesis [] = False
 hasParenthesis ('[':']':xs) = True
-hasParenthesis (x:xs)       = hasParenthesis xs
+hasParenthesis (x:xs) = hasParenthesis xs
 
 deleteParenthesis :: String -> String
-deleteParenthesis []           = []
+deleteParenthesis [] = []
 deleteParenthesis ('[':']':xs) = xs
-deleteParenthesis (x:xs)       = x : deleteParenthesis xs
+deleteParenthesis (x:xs) = x : deleteParenthesis xs
 
 deleteParentheses :: String -> String
 deleteParentheses source
