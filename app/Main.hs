@@ -1,24 +1,14 @@
-module Main where
+{-# LANGUAGE NoImplicitPrelude #-}
 
-import Brainfxck
-import CheckSyntax
-import Control.Monad
-import Control.Monad.Trans
-import System.Console.Haskeline
+module Main
+  ( main
+  ) where
 
-type Repl a = InputT IO a
+import Import
+import Prelude (getLine)
+import Run
 
 main :: IO ()
-main = runInputT defaultSettings repl
-
-repl :: Repl ()
-repl = do
-  safeInput <- getInputLine ">> "
-  case safeInput of
-    Just ":q" -> outputStrLn "See you later."
-    Nothing -> outputStrLn "See you later" >> repl
-    Just input -> liftIO (printExecuted =<< execute input) >> repl
-
-printExecuted :: Either [Result] String -> IO ()
-printExecuted (Left errors) = mapM_ print errors
-printExecuted (Right s) = putStrLn s
+main = do
+  name <- getLine
+  runRIO name sayHello

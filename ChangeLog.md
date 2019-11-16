@@ -1,3 +1,3 @@
-# Changelog for brainfxck-interpreter
+# Changelog for Brainfxck-interpreter
 
 ## Unreleased changes
