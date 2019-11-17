@@ -1,10 +1,5 @@
-{-# LANGUAGE NoImplicitPrelude #-}
-
-module Util
-  ( plus2
-  ) where
+module Util where
 
 import RIO
-
-plus2 :: Int -> Int
-plus2 = (+ 2)
+import qualified RIO.List as L
+import qualified RIO.Vector.Boxed as VB

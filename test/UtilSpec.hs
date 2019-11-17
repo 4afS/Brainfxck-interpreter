@@ -4,13 +4,28 @@ module UtilSpec
   ( spec
   ) where
 
+import Brainfxck.Tokenize
 import Import
+import qualified RIO.Vector.Boxed as VB
 import Test.Hspec
 import Test.Hspec.QuickCheck
 
 spec :: Spec
-spec = do
-  describe "plus2" $ do
-    it "basic check" $ plus2 0 `shouldBe` 2
-    it "overflow" $ plus2 maxBound `shouldBe` minBound + 1
-    prop "minus 2" $ \i -> plus2 i - 2 `shouldBe` i
+spec =
+  describe "tokenize" $ do
+    it "basic check" $
+      tokenize "><+-.,[]" `shouldBe`
+      VB.fromList
+        [ GraterThan
+        , LessThan
+        , Plus
+        , Minus
+        , Dot
+        , Comma
+        , BracketLeft
+        , BracketRight
+        ]
+    it "elem Comment" $
+      tokenize "+a<bc->" `shouldBe`
+      VB.fromList [Plus, LessThan, Minus, GraterThan]
+    it "empty" $ tokenize "" `shouldBe` VB.fromList []

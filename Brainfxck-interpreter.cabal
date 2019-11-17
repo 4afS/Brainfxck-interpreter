@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: a39bca388f4092f0b27ea9e41556f4e3f573b2a26313529f68fe1893fabef64b
+-- hash: b810ea1bdd6a46b45b16b066f4f6986e5231aedc121c240d9846aba163a818dd
 
 name:           Brainfxck-interpreter
 version:        0.1.0.0
@@ -27,6 +27,9 @@ source-repository head
 
 library
   exposed-modules:
+      Brainfxck.Eval
+      Brainfxck.Parse
+      Brainfxck.Tokenize
       Import
       Run
       Types
